@@ -55,7 +55,7 @@ Other molecule samples and their functional groups can be found in `RASCALL_Mole
 
 Skim the [RASCALL paper](https://pubs.rsc.org/en/content/articlehtml/2019/cp/c8cp07057a) which describes the function, workings and science of RASCALL. Section 5.3 `Future versions` includes plans for updates on code base. The RASCALL paper and this repository will serve as the main reference. Notes by previous contributors can be found in the `notes/` folder. 
 
-The quickest way to understand the workings of RASCALL is to run the code in Quick Start, read the code and see what they are doing. 
+The quickest way to understand the workings of RASCALL is to run the code in Quick Start, read the code, make small modifications and see what they are doing. 
 
 
 ## Intermediate Projects
