@@ -97,7 +97,7 @@ class Plotter:
     def plot_NIST_spectrum(self, molecule_smile):
         Absorption_Boost = 3
         nu, coef = NIST_spectra.nist_spectrum(molecule_smile)
-        plt.plot(nu, coef* Absorption_Boost)
+        plt.plot(nu, coef* Absorption_Boost, label="NIST experimental data")
 
     def plot_ExoMol_spectrum(self, molecule_smile):
         Absorption_Boost = 3
@@ -117,13 +117,29 @@ class Plotter:
         nu, xsec = ATMOS_crosssections.ATMOS_crosssection(molecule_smile)
         plt.plot(nu, xsec, label="ATMOS")
 
+
+
     def show(self, molecule_smile):
         plt.xlabel('Wavenumbers (cm$^{-1}$)', fontsize=16)
         plt.ylabel('Intensity', fontsize=16)
         plt.xlim((0, 4500))
         plt.title(molecule_smile, fontsize=16)
+
         plt.tick_params(axis='both', which='major', labelsize=12)
         plt.tick_params(axis='both', which='minor', labelsize=12)
+
+        # labels 
+        handles, labels = plt.gca().get_legend_handles_labels()
+        by_label = dict(zip(labels, handles))
+        plt.legend(by_label.values(), by_label.keys(), bbox_to_anchor=(1.04, 1), loc="upper left")
+                  
+        textstr = 'Solid lines are rascall \npredictions and dotted   \nlines are still being\ntested.'
+
+        plt.text(0.78, 0.55, textstr, fontsize=12, transform=plt.gcf().transFigure, verticalalignment="center", horizontalalignment="left", wrap = True)
+
+        fig = matplotlib.pyplot.gcf()
+        fig.set_size_inches(10, 6)
+        plt.tight_layout()       
         plt.show()
 
     def handleHydrogenMutingMolecule(self, molecule):
@@ -172,11 +188,11 @@ class Plotter:
 
     def setupAppearance(self, functional, x, y):
         if functional.source == 'ATMOS':
-            markerline, stemlines, baseline = plt.stem(x, y, '--')
+            markerline, stemlines, baseline = plt.stem(x, y, '--', label= functional.code)
         else:
-            markerline, stemlines, baseline = plt.stem(x, y, '-')
+            markerline, stemlines, baseline = plt.stem(x, y, '-',label= functional.code)
 
-        plt.setp(baseline, 'color', 'r', 'linewidth', 1)
+        plt.setp(baseline, visible=False)
         plt.setp(stemlines, 'color', self.colours[self.colourIndex], 'linewidth', 1.5)
         plt.setp(markerline, 'color', self.colours[self.colourIndex], 'linewidth', 1.5)
 
