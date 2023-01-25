@@ -59,7 +59,7 @@ The quickest way to understand the workings of RASCALL is to run the code in Qui
 
 
 ## Intermediate Projects
-- fix rascall_plot line 21 comment on frequency window
+- fix `rascall_plot` line 21 comment on frequency window
 
 
 
