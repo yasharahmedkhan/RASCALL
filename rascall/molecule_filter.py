@@ -1,5 +1,4 @@
 import numpy as np
-
 # INPUT
 # what region, e.g. a specific atmosphere
 # what molecules - e.g. all, Carbon-molecules
@@ -8,7 +7,6 @@ import numpy as np
 # OUTPUT
 # Molecules that fulfill criteria
 # Number of these that have spectra in SQL database
-
 class Molecule_Filter:
     def __init__(self, molecules):
         self.molecules = molecules
@@ -39,7 +37,7 @@ class Molecule_Filter:
                 for molecule_point in molecule.high_and_low_frequencies():
                     low_frequency = molecule_point[0]
                     high_frequency = molecule_point[1]
-                    #           print ("If statement contents \n", window_low, low_frequency, high_frequency, window_high)
+                    print ("If statement contents \n", window_low, low_frequency, high_frequency, window_high)
 
                     if window_low < low_frequency < window_high and window_low < high_frequency < window_high:
                         window_molecules.append(molecule.code)

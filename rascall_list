@@ -21,6 +21,7 @@ if __name__ == '__main__':
     #Terminal arguments for frequency windows/intensity filtering are currently under development, 
     #but this functionality can be accessed within the molecule_filter.py module
     PARSER.add_argument("--fw", nargs="?", help="Molecules in Frequency Window", default=None)
+    
     #Terminal arguments for specific atoms are currently under development
     PARSER.add_argument("--ap", nargs="?", help="List Molecules with Specific Atoms", default=None)
 

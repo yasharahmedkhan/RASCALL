@@ -2,7 +2,6 @@
 """
 Plot a functional group, one plot per bond in the database. Plots should appear in a separate window.
 """
-
 from argparse import ArgumentParser
 
 from rascall import analysis
