@@ -14,6 +14,7 @@ source pythonenv/bin/activate
 ```
 
 3. Installing Dependencies
+   
 In order to install dependencies, once you are in the virtual environment, run the shell script titled "setup_rascall.sh".
 To do this, run the following commands:
 ```sh 
