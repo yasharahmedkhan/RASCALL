@@ -1,0 +1,92 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h1>RASCALL List Function</h1>
+<form id="rascallForm">
+    <label for="mol">Enter Molecule:</label>
+    <input type="text" id="mol" name="mol" required>
+    <button type="submit">Run</button>
+</form>
+<br>
+<h2>RASCALL Plotting Function</h2>
+<form id="plotForm">
+    <label for="mol_plot">Enter Molecule:</label>
+    <input type="text" id="mol_plot" name="mol_plot">
+    <br>
+    <label for="fg">Enter Functional Group:</label>
+    <input type="text" id="fg" name="fg">
+    <br>
+    <label for="mf">Choose Molecular Family:</label>
+    <select id="mf" name="mf">
+        <option value="all">All</option>
+        <option value="halo">Halo</option>
+        <option value="hydro">Hydro</option>
+    </select>
+    <br>
+    <label for="fw">Set Frequency Window:</label>
+    <input type="text" id="fw" name="fw">
+    <br>
+    <label for="ap">Specific Atoms:</label>
+    <input type="text" id="ap" name="ap">
+    <br>
+    <button type="submit">Plot</button>
+</form>
+<pre id="output"></pre>
+<div id="plot"></div>
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+document.getElementById('rascallForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const mol = document.getElementById('mol').value;
+    fetch('/run_rascall', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ mol })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            document.getElementById('output').textContent = "Error: " + data.error;
+        } else {
+            document.getElementById('output').textContent = data.output;
+        }
+    })
+    .catch(error => {
+        document.getElementById('output').textContent = "Error: " + error;
+    });
+});
+
+document.getElementById('plotForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const mol = document.getElementById('mol_plot').value;
+    const fg = document.getElementById('fg').value;
+    const mf = document.getElementById('mf').value;
+    const fw = document.getElementById('fw').value;
+    const ap = document.getElementById('ap').value;
+
+    fetch('/plot_rascall', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ mol, fg, mf, fw, ap })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            document.getElementById('output').textContent = "Error: " + data.error;
+        } else {
+            document.getElementById('output').textContent = '';
+            Plotly.newPlot('plot', data.data, data.layout);
+        }
+    })
+    .catch(error => {
+        document.getElementById('output').textContent = "Error: " + error;
+    });
+});
+</script>
+{% endblock %}
+
+
+

@@ -3,8 +3,24 @@
 Plot a functional group, one plot per bond in the database. Plots should appear in a separate window.
 """
 from argparse import ArgumentParser
-
 from rascall import analysis
+import json
+import sys
+import io
+import matplotlib.pyplot as plt
+import plotly.utils
+from plotly.matploylylib import Exporter, PlotlyRenderer
+
+import matplotlib
+matplotlib.use('Agg')
+
+def plot_to_json(fig):
+    renderer = PlotlyRenderer()
+    exporter = Exporter(renderer)
+    exporter.run(fig)
+
+    plotly_fig = renderer.plotly_fig
+    return json.dumps(plotly_fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 if __name__ == '__main__':
     PARSER = ArgumentParser(description=__doc__)
@@ -25,4 +41,23 @@ if __name__ == '__main__':
 
     args = PARSER.parse_args()
 
+    figures = []
+    plt.ioff()
+
+
+
     analysis.plot(args.fg,args.mf, args.mol)
+
+    figures = [plt.figure(i) for i in plt.get_fignums()]
+
+    if not figures:
+        print(json.dumps({"error": "No molecules found."}))
+        sys.exit(0)
+
+    plots_json = []
+    for fig in figures:
+        plot_json = plot_to_json(fig)
+        plots_json.append(plot_json)
+        plt.close(fig)
+
+    print(json.dumps(plots_json))

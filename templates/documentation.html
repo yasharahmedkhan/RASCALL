@@ -1,0 +1,118 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Documentation</h1>
+    <p>This section provides documentation for each file in the repository, including its basic functionality and inputs.</p>
+    
+    <h2>Files in the Repository</h2>
+    <div>
+        <h3>app2.py</h3>
+        <p><strong>Functionality:</strong> [Description of app2.py functionality]</p>
+        <p><strong>Inputs:</strong> [List of inputs for app2.py]</p>
+        <p><strong>Outputs:</strong> [List of outputs for app2.py]</p>
+    </div>
+    
+    <div>
+        <h3>layout.html</h3>
+        <p><strong>Functionality:</strong> Defines the base layout of the website, including the navigation bar and linking to Bootstrap and jQuery libraries.</p>
+    </div>
+    
+    <div>
+        <h3>search.html</h3>
+        <p><strong>Functionality:</strong> Provides a search form to search for molecules. Fetches and displays search results dynamically.</p>
+    </div>
+    
+    <div>
+        <h3>index.html</h3>
+        <p><strong>Functionality:</strong> Main page with forms to list and plot molecular data.</p>
+        <p><strong>Inputs:</strong> Molecule details, functional groups, molecular families, frequency window, specific atoms.</p>
+        <p><strong>Outputs:</strong> Plotted data displayed using Plotly.</p>
+    </div>
+    
+    <div>
+        <h3>homepage.html</h3>
+        <p><strong>Functionality:</strong> Welcome page for RASCALL, provides an introduction to the platform.</p>
+    </div>
+
+    <div>
+        <h3>analysis.py</h3>
+        <p><strong>Overview:</strong> `analysis.py` is a core module in RASCALL, which plots the spectral features of individual functionals within molecules. It integrates various functionalities like parsing, filtering, and plotting molecular data.</p>
+        
+        <h4>Functions:</h4>
+        <ul>
+            <li>
+                <strong>get_functionals</strong>
+                <p><strong>Description:</strong> Loads and parses functional groups from a CSV file.</p>
+                <p><strong>Inputs:</strong> `filename` (str, optional): The CSV file containing functional data. Default is 'functionals_formatted_eye_edit.csv'.</p>
+                <p><strong>Outputs:</strong> A dictionary of functional groups.</p>
+                <p><strong>Example:</strong></p>
+                <pre><code>functionals = get_functionals()</code></pre>
+            </li>
+            <li>
+                <strong>get_molecules</strong>
+                <p><strong>Description:</strong> Loads and returns a dictionary of molecules with their respective functionals.</p>
+                <p><strong>Inputs:</strong> `filename` (str, optional): The pickle file containing molecular data. Default is 'dictfunct.p'.</p>
+                <p><strong>Outputs:</strong> A dictionary of molecules and their functionals.</p>
+                <p><strong>Example:</strong></p>
+                <pre><code>molecules = get_molecules()</code></pre>
+            </li>
+            <li>
+                <strong>get_plotables</strong>
+                <p><strong>Description:</strong> Retrieves a list of plottable molecules from a file.</p>
+                <p><strong>Inputs:</strong> `filename` (str, optional): The file containing plottable molecules. Default is 'plotable_molecules'.</p>
+                <p><strong>Outputs:</strong> A list of plottable molecules.</p>
+                <p><strong>Example:</strong></p>
+                <pre><code>plotables = get_plotables()</code></pre>
+            </li>
+            <li>
+                <strong>get_hydrocarbons</strong>
+                <p><strong>Description:</strong> Filters and returns a list of hydrocarbons and their count from the molecule dictionary.</p>
+                <p><strong>Inputs:</strong> `plotables` (list): List of plottable molecules. `molecule_dictionary` (dict): Dictionary of molecules and their functionals.</p>
+                <p><strong>Outputs:</strong> A tuple containing a list of hydrocarbons in NIST and count of non-hydrocarbons.</p>
+                <p><strong>Example:</strong></p>
+                <pre><code>hydrocarbons, non_hydrocarbons = get_hydrocarbons(plotables, molecule_dictionary)</code></pre>
+            </li>
+            <li>
+                <strong>get_halocarbons</strong>
+                <p><strong>Description:</strong> Filters and returns a list of halocarbons and their count from the molecule dictionary.</p>
+                <p><strong>Inputs:</strong> `plotables` (list): List of plottable molecules. `molecule_dictionary` (dict): Dictionary of molecules and their functionals.</p>
+                <p><strong>Outputs:</strong> A tuple containing a list of halocarbons in NIST and count of non-hydrocarbons.</p>
+                <p><strong>Example:</strong></p>
+                <pre><code>halocarbons, non_hydrocarbons = get_halocarbons(plotables, molecule_dictionary)</code></pre>
+            </li>
+            <li>
+                <strong>filter_all</strong>
+                <p><strong>Description:</strong> A filter function that returns True for all molecules.</p>
+                <p><strong>Outputs:</strong> Always returns True.</p>
+                <p><strong>Example:</strong></p>
+                <pre><code>all_molecules = filter(filter_all, molecule_dictionary.keys())</code></pre>
+            </li>
+            <li>
+                <strong>filter_halo</strong>
+                <p><strong>Description:</strong> A filter function that returns True for halocarbons.</p>
+                <p><strong>Inputs:</strong> `mol` (str): A molecule code.</p>
+                <p><strong>Outputs:</strong> Returns True if the molecule is a halocarbon.</p>
+                <p><strong>Example:</strong></p>
+                <pre><code>halocarbons = filter(filter_halo, molecule_dictionary.keys())</code></pre>
+            </li>
+            <li>
+                <strong>filter_hydro</strong>
+                <p><strong>Description:</strong> A filter function that returns True for hydrocarbons.</p>
+                <p><strong>Inputs:</strong> `mol` (str): A molecule code.</p>
+                <p><strong>Outputs:</strong> Returns True if the molecule is a hydrocarbon.</p>
+                <p><strong>Example:</strong></p>
+                <pre><code>hydrocarbons = filter(filter_hydro, molecule_dictionary.keys())</code></pre>
+            </li>
+            <li>
+                <strong>plot</strong>
+                <p><strong>Description:</strong> Plots molecules with NIST spectra alongside ATMOS filtered by functional.</p>
+                <p><strong>Inputs:</strong> `functional_to_test` (str): The functional group to test. `molecule_fam` (str, optional): The family of molecules to plot. Default is "all". `single_molecule_to_search_for` (str, optional): A specific molecule to search for and plot.</p>
+                <p><strong>Outputs:</strong> Plots the spectra and functionals of the specified molecules.</p>
+                <p><strong>Example:</strong></p>
+                <pre><code>plot('C=O')</code></pre>
+            </li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

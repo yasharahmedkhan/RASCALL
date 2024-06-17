@@ -1,0 +1,79 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Search For Molecules Here!</h1>
+    <form id="searchForm" method="GET" action="/search_results">
+        <input type="text" id="query" name="query" placeholder="Enter search query">
+        <input type="submit" value="Search">
+    </form>
+    <div id="results"></div>
+</div>
+
+<script>
+    document.getElementById('searchForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        var query = document.getElementById('query').value.trim();
+        if (query !== '') {
+            fetch('/search_results?query=' + encodeURIComponent(query))
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('Error in search: ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(function(data) {
+                if (data.error) {
+                    document.getElementById('results').innerHTML = '<p>' + data.error + '</p>';
+                } else {
+                    displayResults(data);
+                }
+            })
+            .catch(function(error) {
+                console.error('Error fetching search results:', error);
+                document.getElementById('results').innerHTML = '<p>Error loading results.</p>';
+            });
+        } else {
+            document.getElementById('results').innerHTML = '<p>Please enter a search term.</p>';
+        }
+    });
+
+    function displayResults(results) {
+        var resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = '';
+
+        if (results.length === 0) {
+            resultsDiv.innerHTML = '<p>No results found.</p>';
+            return;
+        }
+
+        var table = document.createElement('table');
+        table.className = 'table table-striped'; // Bootstrap classes
+        var headerRow = table.insertRow();
+        var headers = ['SMILES', 'rdkit_SMILES', 'Molecular Weight', 'Molecular Formula', 'IUPAC Name', 'EPISUITE-Compatible SMILES', 'InChI Code', 'InChI Key'];
+        headers.forEach(function(headerText) {
+            var th = document.createElement('th');
+            th.textContent = headerText;
+            headerRow.appendChild(th);
+        });
+
+        results.forEach(function(result) {
+            var row = table.insertRow();
+            headers.forEach(function(header) {
+                var cell = row.insertCell();
+                cell.textContent = result[header];
+            });
+        });
+
+        resultsDiv.appendChild(table);
+    }
+</script>
+{% endblock %}
+
+
+
+
+
+
+
+

@@ -1,7 +1,6 @@
 #/bin/bash #update according to your PC
 
 # Install dependencies
-pip3 install tk
 pip3 install backports.functools-lru-cache
 pip3 install cycler
 pip3 install enum34
