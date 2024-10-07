@@ -1,31 +1,88 @@
 #!/usr/bin/env python3
 """
-Plot a functional group, one plot per bond in the database. Plots should appear in a separate window.
+Plot a functional group, one plot per bond in the database, or filter and list molecules based on atmospheric windows and instrument wavelength range.
 """
 
 from argparse import ArgumentParser
+from rascall import database, molecule_filter
+from rascall.atmospheric_windows import ATMOSPHERIC_WINDOWS
 
-from rascall import database
+def parse_wavelength_range(range_str):
+    start, end = map(float, range_str.split('-'))
+    return start, end
 
-if __name__ == '__main__':
+def main():
     PARSER = ArgumentParser(description=__doc__)
 
-    #eg test functional: "[!#1]C#C[!#1]"
+    # Existing arguments
     PARSER.add_argument("--fg", nargs="?", help="List Molecules with Functional Group", default=None)
-
-    #eg, try 'CN(CC)C'
     PARSER.add_argument("--mol", nargs="?", help="List Functional Groups in Molecule", default=None)
-
-    PARSER.add_argument("--mf", nargs="?", help="List Molecules in Family", default="all", choices=["halo","hydro","all"])
-
-    #Terminal arguments for frequency windows/intensity filtering are currently under development, 
-    #but this functionality can be accessed within the molecule_filter.py module
+    PARSER.add_argument("--mf", nargs="?", help="List Molecules in Family", default=None, choices=["halo", "hydro", "all"])
     PARSER.add_argument("--fw", nargs="?", help="Molecules in Frequency Window", default=None)
-    
-    #Terminal arguments for specific atoms are currently under development
     PARSER.add_argument("--ap", nargs="?", help="List Molecules with Specific Atoms", default=None)
+    PARSER.add_argument("--aw", nargs="?", help="List Molecules in Atmospheric Window", 
+                        choices=["co2", "earth", "methane"], default=None)
+
+    # New arguments
+    PARSER.add_argument("--atmosphere", choices=list(ATMOSPHERIC_WINDOWS.keys()), 
+                        help="Target atmosphere type")
+    PARSER.add_argument("--wavelength", type=parse_wavelength_range,
+                        help="Instrument wavelength range (um), e.g. '1-5'")
+    PARSER.add_argument("--strong_threshold", type=float, default=0.1,
+                        help="Threshold for strong features (default: 0.1)")
+    PARSER.add_argument("--multiple_threshold", type=int, default=2,
+                        help="Minimum number of strong features for detailed listing (default: 2)")
 
     args = PARSER.parse_args()
 
-    database.plot(args.fg, args.mf, args.mol)
+    # Load molecules and create filter
+    molecules = database.get_molecules()
+    mol_filter = molecule_filter.Molecule_Filter(molecules)
+
+    # Handle existing functionality
+    if any([args.fg, args.mol, args.mf, args.fw, args.ap, args.aw]):
+        results = database.plot(args.fg, args.mf, args.mol, args.aw)
+        if results is None:
+            print("No results found.")
+        else:
+            for result in results:
+                print(result)
+    
+    # Handle new functionality
+    elif args.atmosphere or args.wavelength:
+        if args.atmosphere:
+            filtered_molecules = mol_filter.filter_for_atmospheric_window(args.atmosphere)
+        elif args.wavelength:
+            start, end = args.wavelength
+            filtered_molecules = mol_filter.filter_for_wavelength_range(start, end)
+
+        # Further filter for strong features
+        strong_molecules = mol_filter.filter_for_intensity(args.strong_threshold, filtered_molecules)
+
+        # Filter for molecules with multiple strong features
+        multiple_strong_molecules = mol_filter.filter_for_multiple_strong_features(
+            args.strong_threshold, args.multiple_threshold, filtered_molecules
+        )
+
+        # Print results
+        print(f"Total molecules in the specified range: {len(filtered_molecules)}")
+        print(f"Molecules with strong features: {len(strong_molecules)}")
+        print(f"Molecules with {args.multiple_threshold}+ strong features: {len(multiple_strong_molecules)}")
+
+        print("\nMolecules with multiple strong features:")
+        for molecule in multiple_strong_molecules[:10]:  # Limit to first 10 for brevity
+            features = mol_filter.get_strong_features(molecule, args.strong_threshold)
+            print(f"{molecule}: {len(features)} strong features")
+            for feature in features:
+                print(f"  - Wavenumber: {feature[0]:.2f} cm^-1, Intensity: {feature[1]:.2f}")
+        
+        if len(multiple_strong_molecules) > 10:
+            print(f"... and {len(multiple_strong_molecules) - 10} more molecules")
+    
+    else:
+        print("Please specify either existing filter options or new atmosphere/wavelength options.")
+
+if __name__ == '__main__':
+    main()
+
 

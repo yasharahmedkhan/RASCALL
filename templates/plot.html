@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RASCALL Plotting</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bokeh/2.4.2/bokeh.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>RASCALL Plotting</h1>
+        {% if error %}
+        <div class="alert alert-danger" role="alert">
+            {{ error }}
+        </div>
+        {% endif %}
+        <form action="/plot" method="post">
+            <div class="mb-3">
+                <label for="fg" class="form-label">Functional Group:</label>
+                <input type="text" class="form-control" id="fg" name="fg" placeholder="e.g. [!#1]C#C[!#1]">
+            </div>
+            <div class="mb-3">
+                <label for="mol" class="form-label">Single Molecule:</label>
+                <input type="text" class="form-control" id="mol" name="mol" placeholder="e.g. CN(CC)C">
+            </div>
+            <div class="mb-3">
+                <label for="mf" class="form-label">Molecular Family:</label>
+                <select class="form-select" id="mf" name="mf">
+                    <option value="all" selected>All</option>
+                    <option value="halo">Halo</option>
+                    <option value="hydro">Hydro</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Generate Plot</button>
+        </form>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bokeh/2.4.2/bokeh.min.js"></script>
+</body>
+</html>

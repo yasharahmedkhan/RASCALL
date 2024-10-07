@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RASCALL Plotting Tool</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        .flex { display: flex; }
+        .w-3\/4 { width: 75%; }
+        .w-1\/4 { width: 25%; }
+        .mt-4 { margin-top: 1rem; }
+    </style>
+</head>
+<body>
+    <h1>RASCALL List Function</h1>
+    <form id="rascallForm">
+        <label for="mol">Enter Molecule:</label>
+        <input type="text" id="mol" name="mol" required>
+        <button type="submit">Run</button>
+    </form>
+    <br>
+    <h2>RASCALL Plotting Function</h2>
+    <form id="plotForm">
+        <label for="mol_plot">Enter Molecule:</label>
+        <input type="text" id="mol_plot" name="mol_plot">
+        <br>
+        <label for="fg">Enter Functional Group:</label>
+        <input type="text" id="fg" name="fg">
+        <br>
+        <label for="mf">Choose Molecular Family:</label>
+        <select id="mf" name="mf">
+            <option value="all">All</option>
+            <option value="halo">Halo</option>
+            <option value="hydro">Hydro</option>
+        </select>
+        <br>
+        <label for="fw">Set Frequency Window:</label>
+        <input type="text" id="fw" name="fw">
+        <br>
+        <label for="ap">Specific Atoms:</label>
+        <input type="text" id="ap" name="ap">
+        <br>
+        <button type="submit">Plot</button>
+    </form>
+
+    <div class="flex mt-4">
+        <div id="plot" class="w-3/4"></div>
+        <div id="selectableLegend" class="w-1/4"></div>
+    </div>
+
+    <pre id="output"></pre>
+
+    <script type="text/javascript">
+        // JavaScript function for selectable legend
+        function createSelectableLegend(legendItems) {
+            const container = document.createElement('div');
+            container.style.cssText = 'padding: 1rem; background-color: white; border-radius: 0.25rem; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);';
+
+            const title = document.createElement('h3');
+            title.textContent = 'Selectable Legend';
+            title.style.cssText = 'font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;';
+            container.appendChild(title);
+
+            const list = document.createElement('ul');
+            list.style.cssText = 'list-style-type: none; padding: 0;';
+
+            legendItems.forEach((item, index) => {
+                const listItem = document.createElement('li');
+                listItem.style.cssText = 'display: flex; align-items: center; margin-bottom: 0.25rem;';
+
+                const colorSpan = document.createElement('span');
+                colorSpan.style.cssText = `width: 1rem; height: 1rem; margin-right: 0.5rem; display: inline-block; background-color: ${item.color};`;
+                listItem.appendChild(colorSpan);
+
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = item.name;
+                nameSpan.style.cssText = 'user-select: all;';
+                listItem.appendChild(nameSpan);
+
+                list.appendChild(listItem);
+            });
+
+            container.appendChild(list);
+            return container;
+        }
+
+        // Event listener for RASCALL List Function
+        document.getElementById('rascallForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const mol = document.getElementById('mol').value;
+            fetch('/run_rascall', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ mol })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('output').textContent = "Error: " + data.error;
+                } else {
+                    document.getElementById('output').textContent = data.output;
+                }
+            })
+            .catch(error => {
+                document.getElementById('output').textContent = "Error: " + error;
+            });
+        });
+
+        // Event listener for RASCALL Plotting Function
+        document.getElementById('plotForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const mol = document.getElementById('mol_plot').value;
+            const fg = document.getElementById('fg').value;
+            const mf = document.getElementById('mf').value;
+            const fw = document.getElementById('fw').value;
+            const ap = document.getElementById('ap').value;
+
+            fetch('/plot_rascall', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ mol, fg, mf, fw, ap })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('output').textContent = "Error: " + data.error;
+                } else {
+                    document.getElementById('output').textContent = '';
+                    Plotly.newPlot('plot', data.data, data.layout);
+                    
+                    // Create and append the selectable legend
+                    const legendContainer = document.getElementById('selectableLegend');
+                    legendContainer.innerHTML = ''; // Clear previous content
+                    legendContainer.appendChild(createSelectableLegend(data.legend_items));
+                }
+            })
+            .catch(error => {
+                document.getElementById('output').textContent = "Error: " + error;
+            });
+        });
+    </script>
+</body>
+</html>

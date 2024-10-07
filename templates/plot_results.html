@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RASCALL Plot Results</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bokeh/2.4.2/bokeh.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>RASCALL Plot Results</h1>
+        <div class="row">
+            <div class="col-12">
+                {{ div|safe }}
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-12">
+                <p class="text-muted">Solid lines are RASCALL predictions and dotted lines are still being tested.</p>
+                <a href="/plot" class="btn btn-primary">Back to Plot Page</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bokeh/2.4.2/bokeh.min.js"></script>
+    {{ script|safe }}
+</body>
+</html>

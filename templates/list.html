@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RASCALL List Function</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-6">
+        <h1 class="text-3xl font-bold mb-6">RASCALL List Function</h1>
+        
+        <form id="rascallForm" class="space-y-6">
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold mb-4">Search Parameters</h2>
+                
+                <div class="mb-4">
+                    <label for="fg" class="block text-sm font-medium text-gray-700">List Molecules with Functional Group:</label>
+                    <input type="text" id="fg" name="fg" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                </div>
+
+                <div class="mb-4">
+                    <label for="mol" class="block text-sm font-medium text-gray-700">List Functional Groups in Molecule:</label>
+                    <input type="text" id="mol" name="mol" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                </div>
+
+                <div class="mb-4">
+                    <label for="mf" class="block text-sm font-medium text-gray-700">List Molecules in Family:</label>
+                    <select id="mf" name="mf" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        <option value="">Select a family</option>
+                        <option value="halo">Halo</option>
+                        <option value="hydro">Hydro</option>
+                        <option value="all">All</option>
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label for="fw" class="block text-sm font-medium text-gray-700">Molecules in Frequency Window:</label>
+                    <input type="text" id="fw" name="fw" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                </div>
+
+                <div class="mb-4">
+                    <label for="ap" class="block text-sm font-medium text-gray-700">List Molecules with Specific Atoms:</label>
+                    <input type="text" id="ap" name="ap" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                </div>
+
+                <div class="mb-4">
+                    <label for="aw" class="block text-sm font-medium text-gray-700">List Molecules in Atmospheric Window:</label>
+                    <select id="aw" name="aw" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        <option value="">Select an atmospheric window</option>
+                        <option value="co2">CO2</option>
+                        <option value="earth">Earth</option>
+                        <option value="methane">Methane</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex justify-center">
+                <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                    Run Search
+                </button>
+            </div>
+        </form>
+
+        <div id="output" class="mt-8 bg-white p-6 rounded-lg shadow-md hidden">
+            <h2 class="text-xl font-semibold mb-4">Search Results</h2>
+            <pre class="whitespace-pre-wrap"></pre>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('rascallForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const searchParams = new URLSearchParams();
+        
+            for (const [key, value] of formData.entries()) {
+                if (value) {
+                    searchParams.append(key, value);
+                }
+            }
+        
+            const outputDiv = document.getElementById('output');
+            outputDiv.classList.remove('hidden');
+            outputDiv.querySelector('pre').textContent = 'Processing...';
+        
+            fetch('/run_rascall?' + searchParams.toString())
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        outputDiv.querySelector('pre').textContent = 'Error: ' + data.error;
+                    } else {
+                        outputDiv.querySelector('pre').textContent = data.output || 'No results found.';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    outputDiv.querySelector('pre').textContent = 'An error occurred while processing your request.';
+                });
+        });
+        </script>
+</body>
+</html>

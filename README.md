@@ -13,18 +13,21 @@ The main function of RASCALL is that given inputs of a molecular dictionary and 
 source pythonenv/bin/activate
 ```
 
-3. Installing Dependencies
-   
-In order to install dependencies, once you are in the virtual environment, run the shell script titled "setup_rascall.sh".
-To do this, run the following commands:
+3. Installing Dependencies  
+You might run into errors or issues while installing dependencies. In that case, install each library needed manually with `pip install`. 
 ```sh 
-chmod +x setup_rascall.sh 
+pip install RASCALL 
 ``` 
-then 
+or  
 ```sh
-./setup_rascall.sh
+pip install -r requirements.txt
 ```
-This should check and install all the dependencies required in the virtual environment, and allow you to use RASCALL effectively. This is in place of the previous "requirements.txt" installation that was causing some issues.  
+
+The tkinter library needs system level interface so install for linux with 
+```sh
+sudo apt-get install python3-tk
+```
+or follow the online doc on [installing tk](https://tkdocs.com/tutorial/install.html) for other operating systems.
 
 4. Some example commands to test the installation
 ```sh

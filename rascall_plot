@@ -23,6 +23,9 @@ if __name__ == '__main__':
     #Terminal arguments for specific atoms are currently under development
     PARSER.add_argument("--ap", nargs="?", help="Plot Molecules with Specific Atoms", default=None)
 
+    PARSER.add_argument("--aw", nargs="?", help="Plot Molecules in Atmospheric Window", 
+                        choices=["co2", "earth", "methane"], default=None)
+
     args = PARSER.parse_args()
 
-    analysis.plot(args.fg,args.mf, args.mol)
+    analysis.plot(args.fg, args.mf, args.mol, args.aw)
