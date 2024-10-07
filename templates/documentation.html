@@ -1,0 +1,59 @@
+{% extends "layout.html" %}
+{% block title %}Documentation{% endblock %}
+{% block content %}
+<h1>RASCALL Documentation</h1>
+
+<h2>Overview</h2>
+<p>RASCALL (Rapid Approximate Spectral Calculations for ALL) is a tool for predicting and analyzing molecular spectra. It uses functional group theory to estimate the spectral features of molecules quickly and efficiently.</p>
+
+<h2>Features</h2>
+<h3>List Function</h3>
+<p>The List function allows you to generate lists of molecules based on various criteria such as functional groups, molecular families, or specific atoms.</p>
+<h4>Usage:</h4>
+<pre><code>./rascall_list [OPTIONS]
+
+Options:
+  --fg TEXT     List Molecules with Functional Group
+  --mol TEXT    List Functional Groups in Molecule
+  --mf TEXT     List Molecules in Family (choices: halo, hydro, all)
+  --fw TEXT     Molecules in Frequency Window
+  --ap TEXT     List Molecules with Specific Atoms
+  --aw TEXT     List Molecules in Atmospheric Window (choices: co2, earth, methane)
+</code></pre>
+
+<h3>Plot Function</h3>
+<p>The Plot function creates spectral plots for molecules or functional groups.</p>
+<h4>Usage:</h4>
+<pre><code>./rascall_plot [OPTIONS]
+
+Options:
+  --fg TEXT     Plot Molecules with Functional Group
+  --mol TEXT    Plot Single Molecule
+  --mf TEXT     Plot Molecular Family (choices: halo, hydro, all)
+  --fw TEXT     Molecules in Frequency Window
+  --ap TEXT     Plot Molecules with Specific Atoms
+  --aw TEXT     Plot Molecules in Atmospheric Window (choices: co2, earth, methane)
+</code></pre>
+
+<h3>Search Function</h3>
+<p>The Search function allows you to look up detailed information about specific molecules using various identifiers such as SMILES, formula, name, etc.</p>
+
+<h2>Example Usage</h2>
+<h3>List Example:</h3>
+<pre><code>./rascall_list --fg C=O</code></pre>
+<p>This will list all molecules containing the C=O functional group.</p>
+
+<h3>Plot Example:</h3>
+<pre><code>./rascall_plot --mol CH4 --mf hydro</code></pre>
+<p>This will plot the spectrum of methane (CH4) in the context of hydrocarbons.</p>
+
+<h3>Search Example:</h3>
+<p>Use the search box on the Search page to look up information about a specific molecule. For example, entering "CH4" will return detailed information about methane.</p>
+
+<h2>Additional Resources</h2>
+<p>For more detailed information about RASCALL and its underlying principles, please refer to the following resources:</p>
+<ul>
+    <li><a href="#">RASCALL GitHub Repository</a></li>
+    <li><a href="#">RASCALL: Rapid Approximate Spectral Calculations for ALL (Paper)</a></li>
+</ul>
+{% endblock %}

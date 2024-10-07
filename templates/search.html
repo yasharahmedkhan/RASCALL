@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+{% block title %}Search{% endblock %}
+{% block content %}
+<h1>RASCALL Search Function</h1>
+<form id="searchForm">
+    <div class="form-group">
+        <label for="searchInput">Search for a molecule:</label>
+        <input type="text" class="form-control" id="searchInput" placeholder="Enter SMILES, formula, name, etc.">
+    </div>
+    <button type="submit" class="btn btn-primary">Search</button>
+</form>
+<div id="searchResults" class="mt-4"></div>
+
+<script>
+$(document).ready(function() {
+    $('#searchForm').submit(function(e) {
+        e.preventDefault();
+        var query = $('#searchInput').val();
+        $.ajax({
+            url: '/search_results',
+            method: 'GET',
+            data: { query: query },
+            success: function(response) {
+                var resultsHtml = '<h2>Search Results</h2>';
+                if (response.length === 0) {
+                    resultsHtml += '<p>No results found.</p>';
+                } else {
+                    resultsHtml += '<table class="table table-striped">';
+                    resultsHtml += '<thead><tr><th>Property</th><th>Value</th></tr></thead><tbody>';
+                    response.forEach(function(result) {
+                        for (var key in result) {
+                            resultsHtml += '<tr><td>' + key + '</td><td>' + result[key] + '</td></tr>';
+                        }
+                    });
+                    resultsHtml += '</tbody></table>';
+                }
+                $('#searchResults').html(resultsHtml);
+            },
+            error: function(xhr, status, error) {
+                $('#searchResults').html('<p>Error: ' + error + '</p>');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+
+
+
+
+
+
+
+
