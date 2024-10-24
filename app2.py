@@ -8,7 +8,8 @@ import subprocess
 from bokeh.plotting import figure
 from bokeh.embed import components
 from bokeh.layouts import column
-from bokeh.models import Tabs, Panel, Legend
+from bokeh.models import Tabs, Panel, Legend, ColumnDataSource
+from bokeh.palettes import Spectral10
 
 
 app = Flask(__name__)
@@ -106,57 +107,93 @@ def plot_page():
         mol = request.form.get('mol')
         mf = request.form.get('mf', 'all')
         
-        plot = generate_tabbed_plots(fg, mf, mol)
+        plot, tab_data = generate_tabbed_plots(fg, mf, mol)
         
         if plot:
             script, div = components(plot)
-            return render_template('plot_results.html', script=script, div=div)
+            return render_template('plot_results.html', 
+                                script=script, 
+                                div=div, 
+                                tab_data=json.dumps(tab_data))
         else:
             return render_template('plot.html', error="No data found for the given input.")
     
     return render_template('plot.html')
 
+@app.route('/plot_functional/<functional_group>')
+def plot_functional(functional_group):
+    plot, tab_data = generate_tabbed_plots(functional_group, 'all', None)
+    if plot:
+        script, div = components(plot)
+        return render_template('plot_results.html', 
+                            script=script, 
+                            div=div, 
+                            tab_data=json.dumps(tab_data))
+    else:
+        return render_template('plot.html', error=f"No data found for functional group: {functional_group}")
+
 def generate_tabbed_plots(fg, mf, mol):
     data = analysis.plot(fg, mf, mol, return_data=True)
     
     if not data:
-        return None
+        return None, {}
     
     tabs = []
+    tab_data = {}  # Store data for each tab
+    
     for molecule, molecule_data in data.items():
-        p = figure(title=f"Spectrum for {molecule}", x_axis_label='Wavenumbers (cm^-1)', y_axis_label='Intensity',
-                   width=800, height=400)
+        p = figure(title=f"Spectrum for {molecule}", 
+                  x_axis_label='Wavenumbers (cm^-1)', 
+                  y_axis_label='Intensity',
+                  width=800, height=400)
         
         legend_items = []
+        colors = Spectral10
+        color_index = 0
         
-        # Plot RASCALL data
+        # Store functional groups and their colors for this molecule
+        tab_data[molecule] = {
+            'functional_groups': [],
+            'colors': [],
+            'is_first': len(tab_data) == 0  # Mark first tab
+        }
+        
         for functional, points in molecule_data['rascall'].items():
             if points:
+                color = colors[color_index]
                 x, y = zip(*points)
-                circle = p.circle(x, y, size=5, color='blue')
-                legend_items.append((functional, [circle]))
+                source = ColumnDataSource(data=dict(x=x, y=y))
+                
+                stems = p.segment(x0='x', y0=0, x1='x', y1='y', color=color, source=source)
+                circles = p.circle('x', 'y', size=5, color=color, source=source)
+                
+                legend_items.append((functional, [stems, circles]))
+                
+                # Store functional group data
+                tab_data[molecule]['functional_groups'].append(functional)
+                tab_data[molecule]['colors'].append(color)
+                
+                color_index = (color_index + 1) % len(colors)
         
-        # Plot NIST data if available
         if 'nist' in molecule_data and molecule_data['nist']:
             x, y = zip(*molecule_data['nist'])
-            line = p.line(x, y, line_color='red')
+            line = p.line(x, y, line_color='black', line_width=1.5)
             legend_items.append(('NIST', [line]))
         
-        # Create and configure the legend
-        legend = Legend(items=legend_items, location="center_right", 
-                        orientation="vertical", label_text_font_size="8pt")
+        legend = Legend(items=legend_items, 
+                       location="center_right", 
+                       orientation="vertical", 
+                       label_text_font_size="8pt")
         legend.click_policy = "hide"
         
-        # Add the legend to the plot layout
         p.add_layout(legend, 'right')
-        
-        # Remove the default legend
         p.legend.visible = True
         
         tab = Panel(child=p, title=molecule)
         tabs.append(tab)
     
-    return Tabs(tabs=tabs) if tabs else None
+    return Tabs(tabs=tabs), tab_data
+
 
 # @app.route('/plot_rascall', methods=['GET'])
 # def plot_rascall():
