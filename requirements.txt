@@ -1,14 +1,55 @@
-backports.functools-lru-cache==1.5
-cycler==0.10.0
-enum34==1.1.6
-kiwisolver==1.0.1
-matplotlib==2.2.2
-numpy==1.15.0
-pyparsing==2.2.0
-Pypubsub==4.0.0
-python-dateutil==2.7.3
-pytz==2018.5
-scipy==1.1.0
-six==1.11.0
-subprocess32==3.5.2
-typing==3.6.4
+# Core Web Framework
+Flask>=2.3.3                
+Flask-SQLAlchemy>=3.1.1     
+Flask-Migrate>=4.0.5        
+Flask-CORS>=4.0.0          
+python-dotenv>=1.0.0       
+Werkzeug>=2.3.7            
+
+# Database and ORM
+SQLAlchemy>=2.0.21        
+alembic>=1.12.0            
+psycopg2-binary>=2.9.7     
+
+# Data Processing & Scientific Computing
+numpy>=1.24.3              
+scipy>=1.11.2              
+pandas>=2.1.0              
+sympy>=1.12                
+
+# Plotting and Visualization
+matplotlib>=3.7.2          
+bokeh>=3.3.0              
+seaborn>=0.12.2           
+plotly>=5.17.0           
+
+# Chemistry-specific
+rdkit>=2023.9.1           
+
+# Type Checking and Code Quality
+mypy>=1.5.1               
+black>=23.9.1             
+isort>=5.12.0             
+flake8>=6.1.0             
+pylint>=2.17.5           
+
+# Testing
+pytest>=7.4.2             
+pytest-cov>=4.1.0         
+pytest-asyncio>=0.21.1    
+
+# Type Stubs for Better Type Checking
+types-Flask-SQLAlchemy>=2.5.9.4
+types-Flask-Migrate>=4.0.0.3
+types-Flask-CORS>=4.0.0.1
+types-python-dotenv>=1.0.0.1
+types-requests>=2.31.0.2
+typing-extensions>=4.8.0
+
+# Utilities
+requests>=2.31.0          
+aiohttp>=3.8.5           
+pyyaml>=6.0.1            
+tqdm>=4.66.1             
+python-dateutil>=2.8.2    
+pytz>=2023.3.post1       
