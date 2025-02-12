@@ -3,8 +3,11 @@
 RASCALL 1 - plotting the spectral features of individual functionals within molecules
 """
 
-import pickle as pickle
+from typing import List, Dict, Any, Optional
+from pathlib import Path
+import pickle
 import re
+import logging
 
 from .functional_parser import Functional_Parser
 from .molecule_parser import Molecule_Parser
@@ -17,32 +20,39 @@ from . import NIST_spectra
 
 from .plot_NIST import NIST_Smile_List
 
-def get_functionals(filename='functionals_formatted_eye_edit.csv'):
-    # Load Functionals
-    # Example data
-    # COC C-O-C sbend 2500 2720 weak
-    # COC C-O-C abend 2800 2920 strong
-    with open(get_file('functionals.csv'), 'rU') as fhl:
+logger = logging.getLogger(__name__)
+
+def get_functionals(filename: str = 'functionals_formatted_eye_edit.csv') -> Dict[str, Any]:
+    """Load functional groups from CSV file."""
+    filepath = Path(get_file('functionals.csv'))
+    with filepath.open('r') as fhl:
         return Functional_Parser().functional_dictionary_for(fhl.readlines())
 
 #print 'Total number of unique functionals', len(functional_dictionary)
 
-def get_molecules(filename=get_file('dictfunct.p')):
-    # Load Molecules
-    #Molecule dictionary sample [('C(C1)(C1F)(CC)', [('[H]C([H])(C)C', 2), ('[H]C([H])([!#1])[!#1]', 2),('[H]C([H])([H])C', 1), ('[H]C([H])([H])[!#1]', 1)]),...]
-    return pickle.load(open(filename, "rb"))
+def get_molecules(filename: Optional[str] = None) -> Dict[str, List[tuple]]:
+    """Load molecule dictionary from pickle file."""
+    if filename is None:
+        filename = get_file('dictfunct.p')
+    
+    filepath = Path(filename)
+    with filepath.open('rb') as f:
+        return pickle.load(f)
 
 
 #print 'Molecule dictionary size', len(molecule_dictionary.items()), 'with sample:', molecule_dictionary.items()[:8]
 #print 'Functionals for molecule C(C)NCC(O)', molecule_dictionary.get('C(C)NCC(O)')
 
-def get_plotables(filename='plotable_molecules'):
-    # looks through all of the plottable molecules
-    plotables = []
-    plotable_molecules = open('plotable_molecules', "r")
-    for line in plotable_molecules:
-        columns = line.strip().split()
-        plotables.append(columns[0])
+def get_plotables(filename: str = 'plotable_molecules') -> List[str]:
+    """Get list of plottable molecules."""
+    plotables: List[str] = []
+    filepath = Path(filename)
+    
+    with filepath.open('r') as f:
+        for line in f:
+            columns = line.strip().split()
+            if columns:
+                plotables.append(columns[0])
     return plotables
 
 # print 'Plotables', plotables
