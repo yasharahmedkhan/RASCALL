@@ -1,6 +1,10 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, current_app
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
+from flask_migrate import Migrate
+from typing import Dict, Any, List, Optional
 import os
+from dotenv import load_dotenv
 import json
 import pandas as pd
 from rascall import analysis
@@ -10,27 +14,47 @@ from bokeh.embed import components
 from bokeh.layouts import column
 from bokeh.models import Tabs, Panel, Legend, ColumnDataSource
 from bokeh.palettes import Spectral10
+from datetime import datetime
+from sqlalchemy.orm import Mapped, mapped_column
 
+load_dotenv()
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///RASCALL_Molecule_Identifiers.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///RASCALL_Molecule_Identifiers.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
+app.config['JSON_SORT_KEYS'] = False
+
+db = SQLAlchemy()
+migrate = Migrate()
+cors = CORS()
+
+def init_app():
+    db.init_app(app)
+    migrate.init_app(app, db)
+    cors.init_app(app)
+    return app
 
 class Chemical(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    smiles = db.Column(db.String, unique=True, nullable=False)
-    rdkit_smiles = db.Column(db.String, nullable=False)
-    molecular_weight = db.Column(db.Float, nullable=False)
-    molecular_formula = db.Column(db.String, nullable=False)
-    iupac_name = db.Column(db.String, nullable=False)
-    episuite_smiles = db.Column(db.String, nullable=False)
-    inchi_code = db.Column(db.String, nullable=False)
-    inchi_key = db.Column(db.String, nullable=False)
+    __tablename__ = 'chemicals'
+    
+    id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
+    smiles: Mapped[str] = mapped_column(db.String, unique=True, nullable=False)
+    rdkit_smiles: Mapped[str] = mapped_column(db.String, nullable=False)
+    molecular_weight: Mapped[float] = mapped_column(db.Float, nullable=False)
+    molecular_formula: Mapped[str] = mapped_column(db.String, nullable=False)
+    iupac_name: Mapped[str] = mapped_column(db.String, nullable=False)
+    episuite_smiles: Mapped[str] = mapped_column(db.String, nullable=False)
+    inchi_code: Mapped[str] = mapped_column(db.String, nullable=False)
+    inchi_key: Mapped[str] = mapped_column(db.String, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(db.DateTime, default=datetime.utcnow)
 
-def populate_db():
-    if os.path.exists('RASCALL_Molecule_Identifiers.csv'):
-        df = pd.read_csv('RASCALL_Molecule_Identifiers.csv')
+def populate_db() -> None:
+    if not os.path.exists('RASCALL_Molecule_Identifiers.csv'):
+        current_app.logger.error("CSV file not found. Please ensure 'RASCALL_Molecule_Identifiers.csv' exists.")
+        return
+        
+    df = pd.read_csv('RASCALL_Molecule_Identifiers.csv')
+    with app.app_context():
         for _, row in df.iterrows():
             if not Chemical.query.filter_by(smiles=row['SMILES']).first():
                 chemical = Chemical(
@@ -45,8 +69,17 @@ def populate_db():
                 )
                 db.session.add(chemical)
         db.session.commit()
-    else:
-        print("CSV file not found. Please ensure 'RASCALL_Molecule_Identifiers.csv' exists.")
+
+def escape_functional_group(fg: str) -> str:
+    return fg.replace('\\', '\\\\')
+
+@app.errorhandler(Exception)
+def handle_error(error: Exception) -> tuple[Dict[str, Any], int]:
+    if isinstance(error, HTTPException):
+        return {"error": error.description}, error.code
+    
+    current_app.logger.error(f"Unexpected error: {str(error)}")
+    return {"error": "An unexpected error occurred"}, 500
 
 @app.route('/')
 def homepage():
@@ -72,6 +105,10 @@ def documentation():
 def run_rascall():
     # Get all query parameters
     params = request.args.to_dict()
+    
+    # Handle functional group parameter specially if present
+    if 'fg' in params:
+        params['fg'] = escape_functional_group(params['fg'])
     
     # Prepare the command
     command = ['./rascall_list']
@@ -104,6 +141,8 @@ def run_rascall():
 def plot_page():
     if request.method == 'POST':
         fg = request.form.get('fg')
+        if fg:
+            fg = escape_functional_group(fg)
         mol = request.form.get('mol')
         mf = request.form.get('mf', 'all')
         
@@ -122,6 +161,7 @@ def plot_page():
 
 @app.route('/plot_functional/<functional_group>')
 def plot_functional(functional_group):
+    functional_group = escape_functional_group(functional_group)
     plot, tab_data = generate_tabbed_plots(functional_group, 'all', None)
     if plot:
         script, div = components(plot)
@@ -256,9 +296,10 @@ def search():
     return jsonify(results_data)
 
 if __name__ == '__main__':
+    app = init_app()
     with app.app_context():
         db.create_all()
         populate_db()
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=5002)
 
 
