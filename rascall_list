@@ -1,88 +1,100 @@
 #!/usr/bin/env python3
 """
-Plot a functional group, one plot per bond in the database, or filter and list molecules based on atmospheric windows and instrument wavelength range.
+Plot a functional group, one plot per bond in the database, or filter and list 
+molecules based on atmospheric windows and instrument wavelength range.
 """
-
+from typing import Tuple, Optional, List
 from argparse import ArgumentParser
+import logging
+from pathlib import Path
+
 from rascall import database, molecule_filter
 from rascall.atmospheric_windows import ATMOSPHERIC_WINDOWS
 
-def parse_wavelength_range(range_str):
-    start, end = map(float, range_str.split('-'))
-    return start, end
+logger = logging.getLogger(__name__)
 
-def main():
-    PARSER = ArgumentParser(description=__doc__)
+def parse_wavelength_range(range_str: str) -> Tuple[float, float]:
+    """Parse wavelength range string into start and end values."""
+    try:
+        start, end = map(float, range_str.split('-'))
+        return start, end
+    except ValueError as e:
+        logger.error(f"Invalid wavelength range format: {range_str}")
+        raise ValueError(f"Wavelength range must be in format 'start-end': {e}")
 
-    # Existing arguments
-    PARSER.add_argument("--fg", nargs="?", help="List Molecules with Functional Group", default=None)
-    PARSER.add_argument("--mol", nargs="?", help="List Functional Groups in Molecule", default=None)
-    PARSER.add_argument("--mf", nargs="?", help="List Molecules in Family", default=None, choices=["halo", "hydro", "all"])
-    PARSER.add_argument("--fw", nargs="?", help="Molecules in Frequency Window", default=None)
-    PARSER.add_argument("--ap", nargs="?", help="List Molecules with Specific Atoms", default=None)
-    PARSER.add_argument("--aw", nargs="?", help="List Molecules in Atmospheric Window", 
-                        choices=["co2", "earth", "methane"], default=None)
+def setup_argparser() -> ArgumentParser:
+    """Set up command line argument parser."""
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument('--fg', help='Functional group to plot')
+    parser.add_argument('--mol', help='Single molecule to plot')
+    parser.add_argument('--mf', help='Molecule family to plot')
+    parser.add_argument('--fw', help='Filter by wavelength range (format: start-end)')
+    parser.add_argument('--ap', help='Atmospheric profile to use')
+    parser.add_argument('--aw', help='Atmospheric window to use', 
+                       choices=list(ATMOSPHERIC_WINDOWS.keys()))
+    parser.add_argument('--atmosphere', help='Filter by atmospheric window',
+                       choices=list(ATMOSPHERIC_WINDOWS.keys()))
+    parser.add_argument('--wavelength', type=parse_wavelength_range,
+                       help='Filter by wavelength range (format: start-end)')
+    parser.add_argument('--strong-threshold', type=float, default=0.5,
+                       help='Threshold for strong features')
+    parser.add_argument('--multiple-threshold', type=int, default=2,
+                       help='Minimum number of strong features')
+    return parser
 
-    # New arguments
-    PARSER.add_argument("--atmosphere", choices=list(ATMOSPHERIC_WINDOWS.keys()), 
-                        help="Target atmosphere type")
-    PARSER.add_argument("--wavelength", type=parse_wavelength_range,
-                        help="Instrument wavelength range (um), e.g. '1-5'")
-    PARSER.add_argument("--strong_threshold", type=float, default=0.1,
-                        help="Threshold for strong features (default: 0.1)")
-    PARSER.add_argument("--multiple_threshold", type=int, default=2,
-                        help="Minimum number of strong features for detailed listing (default: 2)")
-
-    args = PARSER.parse_args()
-
-    # Load molecules and create filter
-    molecules = database.get_molecules()
-    mol_filter = molecule_filter.Molecule_Filter(molecules)
-
-    # Handle existing functionality
-    if any([args.fg, args.mol, args.mf, args.fw, args.ap, args.aw]):
-        results = database.plot(args.fg, args.mf, args.mol, args.aw)
-        if results is None:
-            print("No results found.")
-        else:
-            for result in results:
-                print(result)
-    
-    # Handle new functionality
-    elif args.atmosphere or args.wavelength:
-        if args.atmosphere:
-            filtered_molecules = mol_filter.filter_for_atmospheric_window(args.atmosphere)
-        elif args.wavelength:
-            start, end = args.wavelength
-            filtered_molecules = mol_filter.filter_for_wavelength_range(start, end)
-
-        # Further filter for strong features
-        strong_molecules = mol_filter.filter_for_intensity(args.strong_threshold, filtered_molecules)
-
-        # Filter for molecules with multiple strong features
-        multiple_strong_molecules = mol_filter.filter_for_multiple_strong_features(
-            args.strong_threshold, args.multiple_threshold, filtered_molecules
-        )
-
-        # Print results
-        print(f"Total molecules in the specified range: {len(filtered_molecules)}")
-        print(f"Molecules with strong features: {len(strong_molecules)}")
-        print(f"Molecules with {args.multiple_threshold}+ strong features: {len(multiple_strong_molecules)}")
-
-        print("\nMolecules with multiple strong features:")
-        for molecule in multiple_strong_molecules[:10]:  # Limit to first 10 for brevity
-            features = mol_filter.get_strong_features(molecule, args.strong_threshold)
-            print(f"{molecule}: {len(features)} strong features")
-            for feature in features:
-                print(f"  - Wavenumber: {feature[0]:.2f} cm^-1, Intensity: {feature[1]:.2f}")
-        
-        if len(multiple_strong_molecules) > 10:
-            print(f"... and {len(multiple_strong_molecules) - 10} more molecules")
-    
+def process_existing_functionality(args: ArgumentParser) -> None:
+    """Handle existing plotting functionality."""
+    results = database.plot(args.fg, args.mf, args.mol, args.aw)
+    if results is None:
+        logger.warning("No results found.")
     else:
-        print("Please specify either existing filter options or new atmosphere/wavelength options.")
+        for result in results:
+            logger.info(result)
 
-if __name__ == '__main__':
+def process_new_functionality(args: ArgumentParser) -> None:
+    """Handle new filtering functionality."""
+    filtered_molecules: List[str] = []
+    
+    if args.atmosphere:
+        filtered_molecules = molecule_filter.filter_for_atmospheric_window(args.atmosphere)
+    elif args.wavelength:
+        start, end = args.wavelength
+        filtered_molecules = molecule_filter.filter_for_wavelength_range(start, end)
+
+    strong_molecules = molecule_filter.filter_for_intensity(
+        args.strong_threshold, filtered_molecules
+    )
+    
+    multiple_strong_molecules = molecule_filter.filter_for_multiple_strong_features(
+        args.strong_threshold, args.multiple_threshold, filtered_molecules
+    )
+
+    logger.info(f"Found {len(filtered_molecules)} molecules")
+    logger.info(f"Found {len(strong_molecules)} molecules with strong features")
+    logger.info(f"Found {len(multiple_strong_molecules)} molecules with multiple strong features")
+
+def main() -> None:
+    """Main entry point."""
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    
+    parser = setup_argparser()
+    args = parser.parse_args()
+
+    try:
+        if any([args.fg, args.mol, args.mf, args.fw, args.ap, args.aw]):
+            process_existing_functionality(args)
+        elif args.atmosphere or args.wavelength:
+            process_new_functionality(args)
+        else:
+            parser.print_help()
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
+        raise SystemExit(1)
+
+if __name__ == "__main__":
     main()
 
 
