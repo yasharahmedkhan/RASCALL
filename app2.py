@@ -73,13 +73,13 @@ def populate_db() -> None:
 def escape_functional_group(fg: str) -> str:
     return fg.replace('\\', '\\\\')
 
-@app.errorhandler(Exception)
-def handle_error(error: Exception) -> tuple[Dict[str, Any], int]:
-    if isinstance(error, HTTPException):
-        return {"error": error.description}, error.code
+# @app.errorhandler(Exception)
+# def handle_error(error: Exception) -> tuple[Dict[str, Any], int]:
+#     if isinstance(error, HTTPException):
+#         return {"error": error.description}, error.code
     
-    current_app.logger.error(f"Unexpected error: {str(error)}")
-    return {"error": "An unexpected error occurred"}, 500
+#     current_app.logger.error(f"Unexpected error: {str(error)}")
+#     return {"error": "An unexpected error occurred"}, 500
 
 @app.route('/')
 def homepage():
